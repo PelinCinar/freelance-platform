@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon server.js",
-    "dev": "cd src && nodemon server.js",
+    "dev": " nodemon server.js",
     "watch": "node --watch server.js"
   },
   "keywords": [],
