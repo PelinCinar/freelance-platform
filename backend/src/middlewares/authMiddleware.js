@@ -1,48 +1,60 @@
 const jwt = require("jsonwebtoken");
 const { accessToken, refreshToken } = require("../config/jwtConfig.js");
 const RefreshToken = require("../models/RefreshToken.js");
-const ROLES = require("../constants/roles.js");
 
-//Kullanıcının kimliğini doğrulama Midd. Api isteğinde geçerli bir access token taşımasını zorunlu kıldırdık.
+// Access token doğrulama middleware'i
 const verifyAccessToken = (req, res, next) => {
-  const token =
-    req.cookies.accessToken || req.headers.authorization?.split(" ")[1]; //kullanıcıdan kwt token olup olmadığını ya çerezden ya da auth başlığından olup olmadığını kontrol ediuoruz
+  // Cookie üzerinden access token alıyoruz
+  const token = req.cookies.accessToken;
+
+  // Eğer token yoksa 403 hatası döndürüyoruz
   if (!token) {
     return res.status(403).json({ message: "Access token zorunludur." });
   }
+
   try {
-    const decoded = jwt.verify(token, accessToken.secret);//decoded değişkeni içinde token geçerli mi süresi dolmuş mu falan diye kontrol ediyoruz ve token geçerliyse tokenı çözümlüyoru ve req.user içerisinde tutatark bir sonraki middlewarede kullanılmasını sağlıyoruz.
-    req.user = decoded;
-    next();
+    // Token geçerliliğini kontrol et ve decoded veriyi req.user içine koy
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+    req.user = decoded; // Kullanıcıyı req.user ile bir sonraki middleware'e taşıyoruz
+    next(); // Bir sonraki middleware'e geç
   } catch (error) {
-    return res
-      .status(401)
-      .json({ message: "Geçersiz veya süresi dolmuş access token." });
+    return res.status(401).json({ message: "Geçersiz veya süresi dolmuş access token." });
   }
 };
 
-//Yenileme ve Tokenı doğrulama Midd.
-
+// Refresh token doğrulama middleware'i
 const verifyRefreshToken = async (req, res, next) => {
+  // Refresh token ya cookie'den ya da body'den alınabilir
   const token = req.cookies.refreshToken || req.body.refreshToken;
 
+  // Eğer refresh token yoksa 403 hatası döndürüyoruz
   if (!token) {
-    res.status(403).json({ message: "Refresh token zorunludur." });
+    return res.status(403).json({ message: "Refresh token zorunludur." });
   }
 
   try {
-    const storedToken = await RefreshToken.findOne({ token }); // vtbanında bir refresh token var mı? 
+    // Refresh token'ı veritabanında arıyoruz
+    const storedToken = await RefreshToken.findOne({ token });
+
+    // Eğer token veritabanında yoksa 403 hatası döndür
     if (!storedToken) {
-      return res.status(403).json({ message: "Geçersiz refresh token" });//kullancıı daha önce çıkış yaptı ya da token çalındı koş.
+      return res.status(403).json({ message: "Geçersiz refresh token" });
     }
-    const decoded = jwt.verify(token, refreshToken.secret); //token geçerliyse ve süresi dolmamışsa decoded değişkenine kullancı bilgilerini hemen ata.
+
+    // Refresh token'ı doğrula
+    const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+
+    // Token geçerliyse, kullanıcı bilgilerini req.user içine ekle
     req.user = decoded;
-    next();
+    next(); // Bir sonraki middleware'e geç
   } catch (error) {
-    if (error.name === "TokenExpiredError") { //eğer bu hatayı alırsan hemen refreshtokendeleteone ile vtbanındaki eski refreshtokenı sil diyoruz.VE SONRASIDNA KULLANICI YENİDEN GİRİŞ YAPMAK ZORUNDA KALIR.
+    // Eğer refresh token'ın süresi dolmuşsa, eski token'ı sil
+    if (error.name === "TokenExpiredError") {
       await RefreshToken.deleteOne({ token });
       return res.status(403).json({ message: "Süresi dolmuş refresh token" });
     }
+
+    // Diğer hatalar için geçersiz token mesajı
     return res.status(403).json({ message: "Geçersiz refresh token" });
   }
 };

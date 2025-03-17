@@ -8,8 +8,11 @@ const { accessToken, refreshToken } = require("../config/jwtConfig.js");
 const generateTokens = (user) => {
   const accessTokenPayload = {
     id: user._id,
+    name: user.name, 
     email: user.email,
+    password:user.password,
     role: user.role,
+    createdAt: user.createdAt,
   };
   const refreshTokenPayload = { id: user._id };
   //!Access token oluşturalım.
@@ -20,6 +23,7 @@ const generateTokens = (user) => {
       expiresIn: accessToken.expiresIn,
     }
   );
+  // console.log("User Data in generateTokens:", user);
 
   //!Refresh token oluşturulaım
   const newRefreshToken = jwt.sign(
@@ -52,7 +56,7 @@ const register = async (req, res) => {
     const newUser = new User({
       name,
       email,
-      password: req.body.password,
+      password: hashedPassword,
       role,
     });
     await newUser.save();
