@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const RefreshToken = require("../models/RefreshToken.js");
 const { accessToken, refreshToken } = require("../config/jwtConfig.js");
+const { hashPassword } = require("../utils/passwordUtils"); // Utils dosyanı dahil et
 
 //!Token oluştruma fonk.
 const generateTokens = (user) => {
@@ -10,7 +11,7 @@ const generateTokens = (user) => {
     id: user._id,
     name: user.name, 
     email: user.email,
-    password:user.password,
+    // password:user.password,
     role: user.role,
     createdAt: user.createdAt,
   };
@@ -49,14 +50,13 @@ const register = async (req, res) => {
     }
 
     // Şifreyi hashleyelim
-    const hashedPassword = await bcrypt.hash(password, 10);
     // console.log("hashlenmiş password", hashedPassword);
 
     // Yeni kullanıcı oluşturalım ve hashlediğimiz şifreyi veritabanına kaydedelim
     const newUser = new User({
       name,
       email,
-      password: hashedPassword,
+      password:password,
       role,
     });
     await newUser.save();
@@ -80,13 +80,10 @@ const login = async (req, res) => {
     }
 
     // Şifreyi doğrulayalım
-    const isMatch = await bcrypt.compare(password, user.password);
-   
-
-    if (!isMatch) {
-      return res.status(400).json({ message: "Şifre Yanlış." });
+    const validPassword = await user.comparePassword(password);
+    if (!validPassword) {
+      return res.status(401).json({ message: "Geçersiz email veya şifre." });
     }
-
     // Kullanıcı bilgilerini döndürelim
     const userResponse = user.toObject();
     delete userResponse.password; // Şifreyi dışarıda bırak

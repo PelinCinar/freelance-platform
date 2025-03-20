@@ -33,6 +33,8 @@ UserSchema.pre("save", async function (next) {
     //rastgele salt üreterek şifreyi güvenli hale getir
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);//salt ? daha güvenli hale getirmek için 10 değeri kullanılır ? 
+    // console.log("Hashlenmiş Şifre:", this.password);
+
     next();
   } catch (error) {
     next(error);
@@ -40,7 +42,13 @@ UserSchema.pre("save", async function (next) {
 });
 
 //Kullanıcının girdiği şifre ile veritabanındaki hashlenmiş şifreyi karşılaştır.
-UserSchema.methods.comparePassword = async function (password) { ///compare ile karşılaştırırız.
-  return await bcrypt.compare(password, this.password);
+UserSchema.methods.comparePassword = async function (password) {
+  try {
+    return await bcrypt.compare(password, this.password);
+  } catch (error) {
+    console.error("Şifre karşılaştırma hatası:", error);
+    throw new Error("Şifre doğrulanamadı");
+  }
 };
+
 module.exports = mongoose.model("User", UserSchema);
