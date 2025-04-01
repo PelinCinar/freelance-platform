@@ -1,5 +1,5 @@
 const userValidationRules = require("./userValidator");
-
+const projectValidatorRules =require("./projectValidator.js")
 //kullanıı kaydı için doğrulama kurallarını yazacağız.
 const validateRegistration = [
   userValidationRules.email,
@@ -11,4 +11,12 @@ const validateRegistration = [
 
 const validateLogin = [userValidationRules.email, userValidationRules.password];
 
-module.exports = { validateRegistration, validateLogin };
+const validateProjectCreation = [
+  projectValidatorRules.title,
+  projectValidatorRules.description,
+  projectValidatorRules.budget,
+  projectValidatorRules.status,
+  projectValidatorRules.employer,
+];
+
+module.exports = { validateRegistration, validateLogin,validateProjectCreation };

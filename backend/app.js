@@ -10,6 +10,7 @@ const corsOptions = require("./src/config/corsConfig.js");
 const { logEventsMiddleware } = require("./src/middlewares/logEventsMiddleware.js");
 const errorHandler = require("./src/middlewares/errorHandler.js");
 const userRoutes = require("./src/routes/userRoutes.js");  
+const projectRoutes = require("./src/routes/projectRoutes.js");  
 const app = express();
 
 // Middleware
@@ -19,6 +20,7 @@ app.use(cookieParser());
 app.use(logEventsMiddleware);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes); 
+app.use("/api/projects", projectRoutes); 
 
 // Swagger dokümantasyonu
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
