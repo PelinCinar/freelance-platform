@@ -24,6 +24,11 @@ const projectSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Bid',
   }],
+  acceptedBid: {  // Kabul edilen teklifss
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Bid',
+    default: null,
+  },
   status: {
     type: String,
     enum: ['open', 'in-progress', 'completed', 'closed'],
