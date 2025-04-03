@@ -12,6 +12,7 @@ const errorHandler = require("./src/middlewares/errorHandler.js");
 const userRoutes = require("./src/routes/userRoutes.js");  
 const projectRoutes = require("./src/routes/projectRoutes.js");  
 const bidRoutes = require("./src/routes/bidRoutes.js");  
+const chatRoutes = require("./src/routes/chatRoutes.js");  
 const app = express();
 
 // Middleware
@@ -23,7 +24,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes); 
 app.use("/api/projects", projectRoutes); 
 app.use("/api/bids", bidRoutes); 
-
+app.use('/api/chat', chatRoutes);
 
 // Swagger dokümantasyonu
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
